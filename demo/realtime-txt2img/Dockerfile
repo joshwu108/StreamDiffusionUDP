@@ -58,7 +58,8 @@ RUN pyenv install $PYTHON_VERSION && \
 COPY --chown=user:user . .
 # change dir since pip needs to seed whl folder
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
-RUN pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]
+RUN pip install --no-cache-dir "numpy<2" "huggingface_hub<0.26"
+RUN pip install --no-cache-dir ".[tensorrt]"
 RUN python -m streamdiffusion.tools.install-tensorrt
 
 COPY --from=frontend /app/dist ./frontend/dist

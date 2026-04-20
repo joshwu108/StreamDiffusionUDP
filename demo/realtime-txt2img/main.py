@@ -1,4 +1,5 @@
 import asyncio
+import argparse
 import base64
 import logging
 import os
@@ -150,13 +151,16 @@ class Api:
 
 
 if __name__ == "__main__":
-    from config import Config
-
     config = Config()
+    parser = argparse.ArgumentParser(description="Run the realtime txt2img demo server")
+    parser.add_argument("--host", default=config.host)
+    parser.add_argument("--port", type=int, default=config.port)
+    parser.add_argument("--workers", type=int, default=config.workers)
+    args = parser.parse_args()
 
     uvicorn.run(
         Api(config).app,
-        host=config.host,
-        port=config.port,
-        workers=config.workers,
+        host=args.host,
+        port=args.port,
+        workers=args.workers,
     )

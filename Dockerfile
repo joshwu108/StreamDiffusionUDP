@@ -32,8 +32,7 @@ RUN pip3 install \
 COPY . /streamdiffusion
 WORKDIR /streamdiffusion
 
-RUN python setup.py develop easy_install streamdiffusion[tensorrt] \
+RUN pip install -e ".[tensorrt]" \
     && python -m streamdiffusion.tools.install-tensorrt
 
 WORKDIR /home/ubuntu/streamdiffusion
-

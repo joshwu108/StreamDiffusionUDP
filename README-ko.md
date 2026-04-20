@@ -116,7 +116,8 @@ StreamDiffusion 설치
 
 ```bash
 #최신 버전 설치 (추천)
-pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]
+pip install "numpy<2" "huggingface_hub<0.26"
+pip install "streamdiffusion[tensorrt] @ git+https://github.com/cumulo-autumn/StreamDiffusion.git@main"
 
 
 #또는
@@ -141,7 +142,8 @@ pip install --force-reinstall pywin32
 #### 개발자용
 
 ```bash
-python setup.py develop easy_install streamdiffusion[tensorrt]
+pip install "numpy<2" "huggingface_hub<0.26"
+pip install -e ".[tensorrt]"
 python -m streamdiffusion.tools.install-tensorrt
 ```
 

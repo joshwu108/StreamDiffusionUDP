@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/home/joshua/StreamDiffusionUDP/demo"
+    ],
+    "allow": [
+      "Bash(python -m py_compile demo/realtime-txt2img/latency_bench.py)",
+      "Bash(python -m py_compile demo/udp-txt2img/protocol.py)",
+      "Bash(python -m py_compile demo/udp-txt2img/server.py)",
+      "Bash(python -m py_compile demo/udp-txt2img/client.py)"
+    ]
+  }
+}

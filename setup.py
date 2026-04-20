@@ -5,9 +5,11 @@ from setuptools import find_packages, setup
 
 
 _deps = [
+    "numpy<2",
     "torch",
     "xformers",
     "diffusers==0.24.0",
+    "huggingface_hub<0.26",
     "transformers",
     "accelerate",
     "fire",
@@ -35,9 +37,11 @@ extras["tensorrt"] = deps_list("protobuf", "cuda-python", "onnx", "onnxruntime",
 extras["dev"] = extras["xformers"] + extras["torch"] + extras["tensorrt"]
 
 install_requires = [
+    deps["numpy"],
     deps["fire"],
     deps["omegaconf"],
     deps["diffusers"],
+    deps["huggingface_hub"],
     deps["transformers"],
     deps["accelerate"],
 ]
