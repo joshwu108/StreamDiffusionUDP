@@ -46,46 +46,66 @@ def run_benchmark(url: str, prompt: str, n: int, warmup: int) -> list[dict]:
             # base64 image size in bytes (characters ≈ bytes for ASCII)
             payload_kb = len(body.get("base64_image", "")) / 1024
 
+            server_recv_ns = body.get("server_recv_ns")
+            server_send_ns = body.get("server_send_ns")
+            if server_recv_ns is not None and server_send_ns is not None:
+                server_ms = (server_send_ns - server_recv_ns) / 1e6
+            else:
+                server_ms = None
+            net_ms = (e2e_ms - server_ms) if server_ms is not None else None
+
             if i < warmup:
-                print(f"  warmup {i+1:3d}: {e2e_ms:.1f} ms")
+                srv_str = f"  server={server_ms:.1f}ms" if server_ms is not None else ""
+                print(f"  warmup {i+1:3d}: {e2e_ms:.1f} ms{srv_str}")
                 continue
 
             results.append({
                 "request_num": i - warmup + 1,
                 "e2e_ms": e2e_ms,
+                "server_ms": server_ms,
+                "net_ms": net_ms,
                 "payload_kb": payload_kb,
             })
-            print(f"  req {i - warmup + 1:3d}: {e2e_ms:.1f} ms  payload={payload_kb:.1f} KB")
+            srv_str = f"  server={server_ms:.1f}ms  net={net_ms:.1f}ms" if server_ms is not None else ""
+            print(f"  req {i - warmup + 1:3d}: {e2e_ms:.1f} ms{srv_str}  payload={payload_kb:.1f} KB")
 
     return results
 
 
 def print_stats(results: list[dict]) -> None:
+    def stats(vals: list[float], label: str) -> None:
+        s = sorted(vals)
+        n = len(s)
+        print(f"\n  {label}:")
+        print(f"    Mean:   {statistics.mean(vals):.2f} ms")
+        print(f"    Median: {statistics.median(vals):.2f} ms")
+        print(f"    p95:    {s[int(0.95 * n)]:.2f} ms")
+        print(f"    p99:    {s[int(0.99 * n)]:.2f} ms")
+        print(f"    StdDev: {statistics.stdev(vals):.2f} ms")
+        print(f"    Min:    {min(vals):.2f} ms")
+        print(f"    Max:    {max(vals):.2f} ms")
+
     e2e = [r["e2e_ms"] for r in results]
     payload = [r["payload_kb"] for r in results]
-    n = len(e2e)
-
-    e2e_sorted = sorted(e2e)
-    p95 = e2e_sorted[int(0.95 * n)]
-    p99 = e2e_sorted[int(0.99 * n)]
+    srv = [r["server_ms"] for r in results if r.get("server_ms") is not None]
+    net = [r["net_ms"] for r in results if r.get("net_ms") is not None]
 
     print()
     print("=" * 55)
     print("  HTTP/TCP Latency Results")
     print("=" * 55)
-    print(f"  Requests:        {n}")
-    print(f"  Mean E2E:        {statistics.mean(e2e):.2f} ms")
-    print(f"  Median E2E:      {statistics.median(e2e):.2f} ms")
-    print(f"  p95 E2E:         {p95:.2f} ms")
-    print(f"  p99 E2E:         {p99:.2f} ms")
-    print(f"  StdDev (jitter): {statistics.stdev(e2e):.2f} ms")
-    print(f"  Min E2E:         {min(e2e):.2f} ms")
-    print(f"  Max E2E:         {max(e2e):.2f} ms")
-    print(f"  Throughput:      {1000 / statistics.mean(e2e):.2f} req/s")
-    print(f"  Payload mean:    {statistics.mean(payload):.1f} KB (base64 JPEG)")
+    print(f"  Requests measured: {len(results)}")
+
+    stats(e2e, "End-to-End Latency")
+    if srv:
+        stats(srv, "Server-Side Latency (inference + encode)")
+    if net:
+        stats(net, "Network Overhead (E2E - server)")
+
+    print(f"\n  Throughput:        {1000 / statistics.mean(e2e):.2f} req/s")
+    print(f"  Payload mean:      {statistics.mean(payload):.1f} KB (base64 JPEG)")
     print("=" * 55)
 
-    # Buckets
     buckets = [0, 50, 100, 150, 200, 300, 500, float("inf")]
     labels = ["<50", "50-100", "100-150", "150-200", "200-300", "300-500", "500+"]
     counts = [0] * len(labels)
@@ -95,7 +115,7 @@ def print_stats(results: list[dict]) -> None:
                 counts[j] += 1
                 break
 
-    print("\n  Latency histogram (ms):")
+    print("\n  E2E latency histogram (ms):")
     for label, count in zip(labels, counts):
         bar = "█" * count
         print(f"    {label:>8} ms: {bar} ({count})")

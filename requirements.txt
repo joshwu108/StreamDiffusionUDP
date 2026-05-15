@@ -1,0 +1,33 @@
+# ── PyTorch (CUDA 11.8) ──────────────────────────────────────────────────────
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch
+torchvision
+
+# ── StreamDiffusion core (from setup.py) ─────────────────────────────────────
+numpy<2
+diffusers==0.24.0
+huggingface_hub<0.26
+transformers
+accelerate
+fire
+omegaconf
+Pillow
+
+# ── Acceleration (optional: comment out if not using xformers/TensorRT) ───────
+xformers
+cuda-python
+onnx==1.15.0
+onnxruntime==1.16.3
+protobuf==3.20.2
+colored
+
+# ── HTTP demo server ──────────────────────────────────────────────────────────
+fastapi>=0.104.1
+uvicorn>=0.24.0
+pydantic
+
+# ── Benchmark clients ─────────────────────────────────────────────────────────
+httpx
+
+# ── Comparison / analysis script ─────────────────────────────────────────────
+matplotlib

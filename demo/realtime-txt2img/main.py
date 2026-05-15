@@ -4,6 +4,7 @@ import base64
 import logging
 import os
 import sys
+import time
 from io import BytesIO
 from pathlib import Path
 
@@ -39,6 +40,8 @@ class PredictResponseModel(BaseModel):
     """
 
     base64_image: str
+    server_recv_ns: int
+    server_send_ns: int
 
 
 class UpdatePromptResponseModel(BaseModel):
@@ -107,8 +110,16 @@ class Api:
         PredictResponseModel
             The prediction result.
         """
+        server_recv_ns = time.perf_counter_ns()
         async with self._predict_lock:
-            return PredictResponseModel(base64_image=self._pil_to_base64(self.stream_diffusion(prompt=inp.prompt)))
+            image = self.stream_diffusion(prompt=inp.prompt)
+            b64 = self._pil_to_base64(image)
+            server_send_ns = time.perf_counter_ns()
+            return PredictResponseModel(
+                base64_image=b64,
+                server_recv_ns=server_recv_ns,
+                server_send_ns=server_send_ns,
+            )
 
     def _pil_to_base64(self, image: Image.Image, format: str = "JPEG") -> bytes:
         """
